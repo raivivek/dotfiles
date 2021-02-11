@@ -1,0 +1,193 @@
+setopt AUTO_CD            # Change to a directory just by typing its name
+setopt AUTO_PUSHD         # Make cd push each old directory onto the stack
+setopt CDABLE_VARS        # Like AUTO_CD, but for named directories
+setopt PUSHD_IGNORE_DUPS  # Don't push duplicates onto the stack
+setopt EXTENDEDGLOB
+setopt NO_COMPLETE_ALIASES
+setopt INTERACTIVE_COMMENTS
+setopt EXTENDED_HISTORY       # Save time stamps and durations
+setopt HIST_EXPIRE_DUPS_FIRST # Expire duplicates first
+setopt HIST_IGNORE_DUPS     # Do not enter 2 consecutive duplicates into history
+setopt HIST_IGNORE_SPACE    # Ignore command lines with leading spaces
+setopt HIST_REDUCE_BLANKS
+setopt HIST_VERIFY          # Reload results of history expansion before executing
+setopt INC_APPEND_HISTORY   # Constantly update $HISTFILE
+setopt SHARE_HISTORY        # Constantly share history between shell instances
+setopt ALWAYS_TO_END
+setopt AUTO_MENU
+# setopt MENU_COMPLETE
+setopt AUTO_LIST
+setopt COMPLETE_IN_WORD
+setopt AUTO_PARAM_SLASH
+unsetopt FLOW_CONTROL
+unsetopt LIST_BEEP
+
+bindkey -e
+
+HISTSIZE=100000
+SAVEHIST=100000
+HISTFILE=$HOME/.zsh_history
+
+# Setup completion system
+autoload -Uz compinit
+
+for dump in $HOME/.zcompdump(#qN.m1); do
+  compinit
+  if [[ -s "$dump" && (! -s "$dump.zwc" || "$dump" -nt "$dump.zwc") ]]; then
+    zcompile "$dump"
+  fi
+done
+compinit -C
+
+# Set up completions
+zstyle ':completion:*' menu select
+zstyle ':completion:*:matches' group yes
+zstyle ':completion:*:options' description yes
+zstyle ':completion:*:options' auto-description '%d'
+zstyle ':completion:*:corrections' format ' %F{green}-- %d (errors: %e) --%f'
+zstyle ':completion:*:descriptions' format ' %F{yellow}-- %d --%f'
+zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
+zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
+zstyle ':completion:*:default' list-prompt '%S%M matches%s'
+
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' verbose yes
+zstyle ':completion::complete:*' use-cache on
+zstyle ':completion::complete:*' cache-path "$HOME/.zcompcache"
+zstyle ':completion:*' list-colors $LS_COLORS
+zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
+zstyle ':completion:*' completer _expand _complete _correct _approximate
+zstyle ':completion:*' list-suffixeszstyle ':completion:*' expand prefix suffix
+zstyle ':completion:*' format ' %F{yellow}-- %d --%f'
+zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
+zstyle ':completion:*' use-compctl false
+zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec))'
+
+# #eval "$(dircolors -b)"
+
+## directories
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*:*:cd:*' tag-order local-directories directory-stack path-directories
+zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
+zstyle ':completion:*:-tilde-:*' group-order 'named-directories' 'path-directories' 'users' 'expand'
+zstyle ':completion:*' squeeze-slashes true
+
+## ignore multiple entries
+zstyle ':completion:*:(rm|kill|diff):*' ignore-line other
+zstyle ':completion:*:rm:*' file-patterns '*:all-files'
+
+## kill jobs
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+
+## ssh/scp/rsync
+zstyle ':completion:*:(ssh|scp|rsync):*' tag-order 'hosts:-host:host hosts:-domain:domain hosts:-ipaddr:ip\ address *'
+zstyle ':completion:*:(scp|rsync):*' group-order users files all-files hosts-domain hosts-host hosts-ipaddr
+zstyle ':completion:*:ssh:*' group-order users hosts-domain hosts-host users hosts-ipaddr
+zstyle ':completion:*:(ssh|scp|rsync):*:hosts-host' ignored-patterns '*(.|:)*' loopback ip6-loopback localhost ip6-localhost broadcasthost
+zstyle ':completion:*:(ssh|scp|rsync):*:hosts-domain' ignored-patterns '<->.<->.<->.<->' '^[-[:alnum:]]##(.[-[:alnum:]]##)##' '*@*'
+zstyle ':completion:*:(ssh|scp|rsync):*:hosts-ipaddr' ignored-patterns '^(<->.<->.<->.<->|(|::)([[:xdigit:].]##:(#c,2))##(|%*))' '127.0.0.<->' '255.255.255.255' '::1' 'fe80::*'
+
+# Load the plugins
+### Added by Zinit's installer
+if [[ ! -f $HOME/.zinit/bin/zinit.zsh ]]; then
+    print -P "%F{33}▓▒░ %F{220}Installing %F{33}DHARMA%F{220} Initiative Plugin Manager (%F{33}zdharma/zinit%F{220})…%f"
+    command mkdir -p "$HOME/.zinit" && command chmod g-rwX "$HOME/.zinit"
+    command git clone https://github.com/zdharma/zinit "$HOME/.zinit/bin" && \
+        print -P "%F{33}▓▒░ %F{34}Installation successful.%f%b" || \
+        print -P "%F{160}▓▒░ The clone has failed.%f%b"
+fi
+
+source "$HOME/.zinit/bin/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zinit-zsh/z-a-rust \
+    zinit-zsh/z-a-as-monitor \
+    zinit-zsh/z-a-patch-dl \
+    zinit-zsh/z-a-bin-gem-node
+
+### End of Zinit's installer chunk
+
+### Custom plugins for zinit
+zinit wait lucid light-mode for \
+    OMZ::plugins/git-auto-fetch/git-auto-fetch.plugin.zsh \
+    zsh-users/zsh-history-substring-search \
+  atinit"zicompinit; zicdreplay" \
+    zdharma/fast-syntax-highlighting \
+    OMZ::plugins/command-not-found/command-not-found.plugin.zsh \
+  atload"_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions \
+  as"completion" \
+    OMZ::plugins/thefuck/thefuck.plugin.zsh \
+    zsh-users/zsh-completions
+
+zinit ice compile'(pure|async).zsh' pick'async.zsh' src'pure.zsh'
+zinit light sindresorhus/pure
+
+fpath+=$HOME/.zsh/pure
+autoload -U promptinit; promptinit
+prompt pure
+
+zinit load bric3/nice-exit-code
+
+## See: https://github.com/marlonrichert/zsh-autocomplete/
+zstyle ':autocomplete:tab:*' insert-unambiguous yes
+zstyle ':autocomplete:*' min-input 3
+zstyle ':autocomplete:*' min-delay 1
+
+export RPS1='%B%F{red}$(nice_exit_code)%f%b'
+
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+ZSH_AUTOSUGGEST_USE_ASYNC=yes
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
+
+
+auto-ls () { ls; }
+[[ ${chpwd_functions[(r)auto-ls]} == auto-ls ]] || chpwd_functions=( auto-ls $chpwd_functions )
+
+# Load Lab HPC configuration if on the target hosts
+case $(hostname -s) in
+  wolverine|falcon) [[ -e $HOME/.plrc ]] && emulate sh -c 'source ~/.plrc' ;;
+  *) echo no ;;
+esac
+
+say "Configuring custom environment..."
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/vivekrai/.anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/vivekrai/.anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/vivekrai/.anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/vivekrai/.anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<
+
+path=(
+  "$HOME/.local/bin"
+  "$HOME/bin:$HOME/bin/kent"
+  "$HOME/.texlive2020/bin/x86_64-linux"
+  "$HOME/.nimble/bin"
+  "$HOME/.cargo/bin"
+  "$HOME/.rbenv/bin"
+  "$HOME/.rbenv/shims"
+  "$path[@]"
+)
+export PATH
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+eval "$(zoxide init zsh)"
+eval "$(rbenv init -)"
+
+say "done."

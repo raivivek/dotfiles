@@ -1,0 +1,10 @@
+# pack-refs with: peeled fully-peeled 
+37ace16eac57cfc7ed3094e678ff882753868ab0 refs/remotes/origin/cqP
+15450eff27be7d1f81f211aaa03d28908b5c4c1a refs/remotes/origin/dispatch_escape
+1ef0f0726cadd96547a5f79103b66339f170da02 refs/remotes/origin/master
+f2b6a2101f72a3829adc2a0ddb3465414b35519b refs/remotes/origin/preload
+10c5f9eee82ce86241dbaa026a85181a8fe4df50 refs/remotes/origin/revert-270-master
+2a7aa5bd5af571f67f361f599e054d56f435bce2 refs/tags/v1.0
+^835fdedf5fc9fa2354306738dd96c3a984c35485
+9ee72e68ce6df44722b5bbf53136ab1a5fc165a1 refs/tags/v1.1
+^a1571cd2585d49fda14a979aac553a2c94e33e3a

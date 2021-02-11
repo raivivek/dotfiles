@@ -1,0 +1,291 @@
+# Homebrew; Only on MacOS
+#
+if [[ $OSTYPE == "darwin"* ]]; then
+    alias brewup='brew update; brew upgrade; brew prune; brew cleanup; brew doctor'
+    alias cleanup="find . -type f -name '*.DS_Store' -ls -delete"
+fi
+
+# Pagers
+alias less='less -FWXJ'
+alias zl='zless -FWXJ'
+alias zls='zless -FWXJ'
+alias zm='zmore'
+alias zc='zcat'
+
+say() {
+  echo "$1" > /dev/stderr
+}
+
+function lss() {
+  if [[ -d "$@" ]]; then
+    ls "$@"
+  else
+    less "$@"
+  fi
+}
+
+# Moving, renaming, checking path
+alias ~='cd ~'
+alias d='cd'
+alias d..='cd..'
+alias cd..='cd..'
+alias ..='cd ..'
+alias ...='cd ../../'
+alias ....='cd ../../..'
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias md='mkdir -pv'
+mkd() { mkdir -- "$1" && cd -P -- "$1" ; }
+alias fix_stty='stty sane'
+alias rmr='rm -rf'
+alias rmempty="find . -type d -empty -delete"
+alias rl='realpath'
+alias path='echo -e ${PATH//:/\\n}'
+
+rcp() {
+  rsync -avr --human-readable --progress --stats "$1" "$2";
+}
+
+# Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
+function compress() {
+    local tmpFile="${@%/}.tar";
+    tar -cvf "${tmpFile}" --exclude=".DS_Store" "${@}" || return 1;
+
+    size=$(
+        stat -f"%z" "${tmpFile}" 2> /dev/null; # OS X `stat`
+        stat -c"%s" "${tmpFile}" 2> /dev/null # GNU `stat`
+    );
+
+    local cmd="";
+    if (( size < 52428800 )) && hash zopfli 2> /dev/null; then
+        # the .tar file is smaller than 50 MB and Zopfli is available; use it
+        cmd="zopfli";
+    else
+        if hash pigz 2> /dev/null; then
+            cmd="pigz";
+        else
+            cmd="gzip";
+        fi;
+    fi;
+
+    echo "Compressing .tar using \`${cmd}\`…";
+    "${cmd}" -v "${tmpFile}" || return 1;
+    [ -f "${tmpFile}" ] && rm "${tmpFile}";
+    echo "${tmpFile}.gz created successfully.";
+}
+
+# extract archives with one function
+extract () {
+if [ -f $1 ] ; then
+  case $1 in
+    *.tar.bz2)   tar xjf $1     ;;
+    *.tar.gz)    tar xzf $1     ;;
+    *.bz2)       bunzip2 $1     ;;
+    *.rar)       unrar e $1     ;;
+    *.gz)        gunzip $1      ;;
+    *.tar)       tar xf $1      ;;
+    *.tbz2)      tar xjf $1     ;;
+    *.tgz)       tar xzf $1     ;;
+    *.zip)       unzip $1       ;;
+    *.Z)         uncompress $1  ;;
+    *.7z)        7z x $1        ;;
+    *)     echo "'$1' cannot be extracted via extract()" ;;
+     esac
+ else
+     echo "'$1' is not a valid file"
+ fi
+}
+
+# Listing things
+## Detect which `ls` flavor is in use
+if ls --color > /dev/null 2>&1; then # GNU `ls`
+    colorflag="--color"
+else # OS X `ls`
+    colorflag="-G"
+fi
+
+alias ls='ls -Fhp ${colorflag}'
+alias l='ls'
+alias ll='ls -lr'
+alias la='ls -la'
+alias lla='ls -la'
+alias lsd="ls -l | grep --color=never '^d'"
+
+# Determine size of a file or total size of a directory
+function fsize() {
+    if du -b /dev/null > /dev/null 2>&1; then
+        local arg=-sbh;
+    else
+        local arg=-sh;
+    fi
+    if [[ -n "$@" ]]; then
+        du $arg -- "$@";
+    else
+        du $arg .[^.]* *;
+    fi;
+}
+
+# Processes / Monitoring
+alias psu='ps -fx -U $USER'
+alias ht='htop'
+alias htu='htop -u $(whoami)'
+
+# Permissions
+alias s='sudo'
+alias se='sudo env PATH="$PATH"'
+alias ax='chmod a+x'
+
+# Conda
+alias coa='conda activate'
+alias cod='conda deactivate'
+
+# Vim / Editing
+alias e='nvim -p'
+alias vi='nvim -p'
+alias vim='nvim -p'
+alias ef='nvim -np -u NONE -i NONE -N'
+alias nv='nvim -p'
+
+# Miscellaneous
+alias today="date +%F"
+alias unique="awk '!x[\$0]++'"
+alias copy="tr -d '\n' | pbcopy"
+alias trl="tree -L 2"
+alias cls='printf "\33c'
+alias R="R --quiet --no-save"
+alias myip='curl http://ipecho.net/plain; echo'
+alias reload='source ~/.zshrc'
+alias server='python -m SimpleHTTPServer 8000'
+
+## Translate carriage return EOL to Unix EOL
+## See: https://marcelog.github.io/articles/mac_newline_to_unix_eol.html<Paste>
+fix_eol() {
+  cat "$1" | tr '\r' '\n' | tr -s '\n' > "$1".eol.txt
+}
+
+## Print the head and tail of a file
+function i() { (head -n 3; tail -n 3) < "$1"; }
+
+## Remove tabs and spaces from the end of each line
+function trim_end_whitespce {
+  sed 's/[[:blank:]]*$//' "$1"
+}
+
+# Specific tools; Ideally alias only if installed
+## if exa installed; overwrite ls
+if [ -x "$(command -v exa)" ]; then
+  alias l='exa'
+  alias ls='exa'
+  alias el1='exa -1'
+  alias ll='exa -l'
+  alias la='exa -a'
+  alias ld='eda -D'
+fi
+
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+alias fd='fd --exclude .git'
+alias pu='pueue'
+alias pua='pueue add'
+
+# SLURM aliases; only if SLURM is installed
+if [ -x "$(command -v squeue)" ]; then
+    alias sr='srun'
+    alias sacct='sacct -X --format=JobID,JobName,User,State,ncpus,MaxRSS,Elapsed --units=G'
+    alias sacctu='sacct -X -u $(whoami)'
+
+    alias sq="squeue -S t,-p,P -o '%8i %10u %20j %4t %20R %3C %7m %11l %11L'"
+    alias squ="sq -u $USER"
+    alias sqp='squ -t PENDING'
+    alias sqr='squ -t RUNNING'
+    alias sqc='squ -t CD'
+
+    alias scnodes='scontrol show nodes'
+
+    # Usage: sst <jobid>
+    #     OR sst <jobid>.batch (if you use SBATCH and do not use SRUN inside)
+    alias sst='sstat --format=JobID,NTasks,AveCPU,AveCPUFreq,AveRSS,MaxRSS -j'
+
+    si() {
+    echo "Launching SLURM interactive session (10G mem, /bin/bash)."
+    srun -p interactive --preserve-env --constraint=wolverine --cpu-bind=no --mem=10000 --pty bash -i
+    }
+
+    sjob() {
+    scontrol show jobid -dd "$@";
+    }
+
+    scmd() {
+    if [[ -n "$@" ]]; then
+        sjob "$@" | grep 'Command' | sed 's/Command=//' | xargs $PAGER +G;
+    fi
+    }
+
+    ssummary() {
+        squeue "$@" | awk '
+        BEGIN {
+            abbrev["R"]="(Running)"
+            abbrev["PD"]="(Pending)"
+            abbrev["CG"]="(Completing)"
+            abbrev["F"]="(Failed)"
+        }
+        NR>1 {a[$5]++; b[$5][$8]++}
+        END {
+            for (i in a) {
+            printf "%-2s %-12s %d\n", i, abbrev[i], a[i]
+            for (j in b[i]) {
+                printf "└──%-12s %d\n", j, b[i][j]
+            }
+            }
+        }'
+    }
+
+    sout() {
+    if [[ -n "$@" ]]; then
+        sjob "$@" | grep 'StdOut' | sed 's/StdOut=//' | xargs $PAGER +G;
+    fi
+    }
+
+    serr() {
+    if [[ -n "$@" ]]; then
+        sjob "$@" | grep 'StdErr' | sed 's/StdErr=//' | xargs $PAGER +G;
+    fi
+    }
+
+    scjob() {
+    if [[ -n "$@" ]]; then
+        echo "canceling $@"; scancel "$@";
+    fi
+    }
+
+    sinfo() {
+    if [[ -n "$@" ]]; then
+        sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j "$@" --allsteps;
+    fi
+    }
+
+    shold() {
+    if [[ -n "$@" ]]; then
+        echo "holding $@"; scontrol hold "$@";
+    fi
+    }
+
+    sholdall() {
+    squeue -ho %A -t R | xargs -n 1 scontrol suspend
+    }
+
+    srestartall() {
+    squeue -o "%.18A %.18t" -u $(whoami) | awk '{if ($2 =="S"){print $1}}' | xargs -n 1 scontrol resume
+    }
+
+    sstart() {
+    if [[ -n "$@" ]]; then
+        echo "resuming $@"; scontrol resume "$@";
+    fi
+    }
+
+    srq() {
+    if [[ -n "$@" ]]; then
+        echo "requeued $@"; scontrol requeue "$@";
+    fi
+    }
+fi

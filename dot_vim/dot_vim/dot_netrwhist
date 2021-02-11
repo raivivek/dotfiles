@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =7
+let g:netrw_dirhist_7='/home/vivekrai/src/bioconda-recipes-2/recipes/r-liger'
+let g:netrw_dirhist_6='/home/vivekrai/analyses/2019-12-20_Luke_Adipose/control/2019-12-22_compare_to_other/counts'
+let g:netrw_dirhist_5='/home/vivekrai/src/bioconda-recipes-2/recipes/umi_tools'
+let g:netrw_dirhist_4='/home/vivekrai/src/bioconda-recipes-2/recipes/qorts'
+let g:netrw_dirhist_3='/home/vivekrai/prelims'
+let g:netrw_dirhist_2='/home/vivekrai/analyses/2019-12-20_Luke_Adipose/control/2019-12-20_mapping/config'
+let g:netrw_dirhist_1='/lab/work/vivekrai/2019_Venkat_STARR-miseq/work/2019-05-11_mapping/libraries/trimmed'

@@ -1,0 +1,100 @@
+# vim:ft=zsh
+
+export HG19_SIZES=/lab/data/reference/human/hg19/annot/hg19.chrom.sizes
+export HG19_REFSEQ=/lab/data/reference/human/hg19/annot/hg19.tss.refseq.bed
+
+[ -f ~/.tokens ] && . ~/.tokens
+
+#
+# FUNCTIONS
+#
+
+say() {
+  echo "$1" > /dev/stderr
+}
+
+module ()
+{
+    eval `/usr/bin/modulecmd bash $*`
+}
+
+function loadmodule() {
+    for mod in $*
+    do
+    #say "    Loading module $mod"
+        unloadmodule $mod >/dev/null
+        module load $mod
+    done
+}
+
+function unloadmodule() {
+    for mod in $*
+    do
+    #say "    Unloading module $mod"
+        modbase=$(echo $mod | sed 's/\/.*//')
+        module unload $modbase >/dev/null
+    done
+}
+
+notify-me() {
+  slack chat send -ch $SLACK_CLI_CHANNEL
+} 2>&1 > /dev/null
+
+send_to_vs() {
+  command -v rsync 2> /dev/null || { echo "rsync not found. exit"; return 1; }
+
+  if [[ $# -ne 2 ]]; then
+    echo "ERROR: no arguments."
+    echo "usage: host <source> <target>"
+    echo "       <source>: required, source directory"
+    echo "       <target>: target directory to copy to (sends to /lab/web/data/$USER/<target>)"
+    return
+  fi
+
+  source="$1"
+  target="$2"
+  prefix="https://theparkerlab.med.umich.edu/data/$USER"
+
+  [[ ! -d $source ]] && say "$source doesn't exist. exit" && return 1
+
+  chmod -R a+rX $source;
+
+  if [[ -n "$target" ]]; then
+    url="vs:~/web/$target"
+  else
+    say "Error with args"
+    exit 1
+  fi
+
+  say "Sending ${source} to virtual server..."
+
+  rsync -avzhL --human-readable --progress --stats ${source%/} $url
+  say "Visit $prefix/$target/$source"
+}
+
+umask 0007
+
+export LAB=/lab
+export PICARD_HOME=/usr/share/java
+export PICARD=$PICARD_HOME/picard.jar
+export SCRATCH=/localscratch
+export TMPDIR=/localscratch/$USER
+
+say "Configuring Parker Lab environment..."
+export PATH=$LAB/sw/bin:$PATH
+
+module use $LAB/sw/modulefiles
+
+loadmodule ataqv
+loadmodule bamUtil
+loadmodule bedops
+loadmodule hub
+loadmodule kent
+loadmodule R/3.6.1
+loadmodule golang/1.13.5
+loadmodule singularity
+loadmodule globusconnectpersonal
+
+export PERLLIB=$LAB/sw/lib/perl5
+export PGPORT=5433
+export DRMAA_LIBRARY_PATH=/usr/lib/slurm-drmaa/lib/libdrmaa.so.1

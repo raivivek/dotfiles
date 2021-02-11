@@ -1,0 +1,99 @@
+alias sr='srun'
+alias sacct='sacct -X --format=JobID,JobName,User,State,ncpus,MaxRSS,Elapsed --units=G'
+alias sacctu='sacct -X -u $(whoami)'
+
+alias sq="squeue -S t,-p,P -o '%8i %10u %20j %4t %20R %3C %7m %11l %11L'"
+alias squ="sq -u $USER"
+alias sqp='squ -t PENDING'
+alias sqr='squ -t RUNNING'
+alias sqc='squ -t CD'
+
+alias scnodes='scontrol show nodes'
+
+# Usage: sst <jobid>
+#     OR sst <jobid>.batch (if you use SBATCH and do not use SRUN inside)
+alias sst='sstat --format=JobID,NTasks,AveCPU,AveCPUFreq,AveRSS,MaxRSS -j'
+
+si() {
+  echo "Launching SLURM interactive session (10G mem, /bin/bash)."
+  srun -p interactive --preserve-env --constraint=wolverine --cpu-bind=no --mem=10000 --pty bash -i
+}
+
+sjob() {
+  scontrol show jobid -dd "$@";
+}
+
+scmd() {
+  if [[ -n "$@" ]]; then
+    sjob "$@" | grep 'Command' | sed 's/Command=//' | xargs $PAGER +G;
+  fi
+}
+
+ssummary() {
+    squeue "$@" | awk '
+    BEGIN {
+        abbrev["R"]="(Running)"
+        abbrev["PD"]="(Pending)"
+        abbrev["CG"]="(Completing)"
+        abbrev["F"]="(Failed)"
+    }
+    NR>1 {a[$5]++; b[$5][$8]++}
+    END {
+        for (i in a) {
+          printf "%-2s %-12s %d\n", i, abbrev[i], a[i]
+          for (j in b[i]) {
+            printf "└──%-12s %d\n", j, b[i][j]
+          }
+        }
+    }'
+}
+
+sout() {
+  if [[ -n "$@" ]]; then
+    sjob "$@" | grep 'StdOut' | sed 's/StdOut=//' | xargs $PAGER +G;
+  fi
+}
+
+serr() {
+  if [[ -n "$@" ]]; then
+    sjob "$@" | grep 'StdErr' | sed 's/StdErr=//' | xargs $PAGER +G;
+  fi
+}
+
+scjob() {
+  if [[ -n "$@" ]]; then
+    echo "canceling $@"; scancel "$@";
+  fi
+}
+
+sinfo() {
+  if [[ -n "$@" ]]; then
+    sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j "$@" --allsteps;
+  fi
+}
+
+shold() {
+  if [[ -n "$@" ]]; then
+    echo "holding $@"; scontrol hold "$@";
+  fi
+}
+
+sholdall() {
+  squeue -ho %A -t R | xargs -n 1 scontrol suspend
+}
+
+srestartall() {
+  squeue -o "%.18A %.18t" -u $(whoami) | awk '{if ($2 =="S"){print $1}}' | xargs -n 1 scontrol resume
+}
+
+sstart() {
+  if [[ -n "$@" ]]; then
+    echo "resuming $@"; scontrol resume "$@";
+  fi
+}
+
+srq() {
+  if [[ -n "$@" ]]; then
+    echo "requeued $@"; scontrol requeue "$@";
+  fi
+}

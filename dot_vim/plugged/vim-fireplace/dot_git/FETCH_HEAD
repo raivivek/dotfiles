@@ -1,0 +1,9 @@
+a465d598b23b4fa04f0cd61895918cca498f1c9b		branch 'master' of https://github.com/tpope/vim-fireplace
+fb01adf2890a9de3328f9ac22c8a86966ae79c08	not-for-merge	branch 'asyncomplete' of https://github.com/tpope/vim-fireplace
+37ace16eac57cfc7ed3094e678ff882753868ab0	not-for-merge	branch 'cqP' of https://github.com/tpope/vim-fireplace
+15450eff27be7d1f81f211aaa03d28908b5c4c1a	not-for-merge	branch 'dispatch_escape' of https://github.com/tpope/vim-fireplace
+f2b6a2101f72a3829adc2a0ddb3465414b35519b	not-for-merge	branch 'preload' of https://github.com/tpope/vim-fireplace
+10c5f9eee82ce86241dbaa026a85181a8fe4df50	not-for-merge	branch 'revert-270-master' of https://github.com/tpope/vim-fireplace
+b717b66aa0c6166acc50c6e74b310bd7c2e1e650	not-for-merge	tag 'v1.2' of https://github.com/tpope/vim-fireplace
+b9a96b1aa4e1e8cd9ae1c45b8ccf70c7caa547b3	not-for-merge	tag 'v2.0' of https://github.com/tpope/vim-fireplace
+129717cad07d067ca21d8067f4e3c300df4a3c2c	not-for-merge	tag 'v2.1' of https://github.com/tpope/vim-fireplace

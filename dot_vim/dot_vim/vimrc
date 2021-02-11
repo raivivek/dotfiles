@@ -1,0 +1,32 @@
+" Specify a directory for plugins
+" - Example: ~/.vim/plugged
+" - Avoid using standard Vim directory names like 'plugin'
+
+function! s:source_file(path)
+  execute 'source' fnameescape('~/.vim/config/'.a:path)
+endfunction
+
+" if has('nvim')
+"   "do something nvim specific here
+" endif
+
+call plug#begin('~/.vim/plugged')
+call s:source_file('plugins.vim')
+call plug#end()
+
+" Loading configuration modules {{{
+"
+call s:source_file('general.vim')
+call s:source_file('bindings.vim')
+call s:source_file('plugin_config.vim')
+call s:source_file('custom.vim')
+
+colorscheme gruvbox
+set background=dark
+highlight clear SignColumn
+" }}}
+"
+if has("autocmd")
+au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+    \| exe "normal! g'\"" | endif
+endif
